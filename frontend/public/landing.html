@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EdgeShield AI - Offline AI for Smarter Industrial Operations</title>
+  <meta name="description" content="EdgeShield AI predicts equipment failures, detects cyber threats, and optimizes industrial performance in real time without requiring cloud connectivity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#2563EB;--blue-dark:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#DBEAFE;
+      --emerald:#10B981;--emerald-light:#ECFDF5;
+      --gray-bg:#F8FAFC;--gray-border:#E2E8F0;--gray-mid:#94A3B8;--gray-text:#64748B;
+      --dark:#111827;--dark-2:#1F2937;--white:#FFFFFF;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);
+      --shadow-lg:0 10px 40px rgba(37,99,235,0.12),0 4px 16px rgba(0,0,0,0.06);
+      --r-sm:8px;--r-md:14px;--r-lg:20px;--r-xl:28px;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:var(--dark);line-height:1.6;overflow-x:hidden}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.93);backdrop-filter:blur(16px);border-bottom:1px solid rgba(226,232,240,.6);transition:box-shadow .3s}
+    nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.08)}
+    .nav-inner{max-width:1280px;margin:0 auto;padding:0 2rem;height:68px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
+    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+    .nav-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+    .nav-logo-text{font-size:1.05rem;font-weight:700;color:var(--dark);letter-spacing:-.3px}
+    .nav-logo-text span{color:var(--blue)}
+    .nav-links{display:flex;align-items:center;gap:.25rem;list-style:none}
+    .nav-links a{text-decoration:none;color:var(--gray-text);font-size:.875rem;font-weight:500;padding:.45rem .85rem;border-radius:var(--r-sm);transition:color .2s,background .2s}
+    .nav-links a:hover{color:var(--blue);background:var(--blue-light)}
+    .nav-actions{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+    .btn-login{padding:.5rem 1.25rem;border:1.5px solid var(--gray-border);background:transparent;color:var(--dark);font-size:.875rem;font-weight:600;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;font-family:inherit}
+    .btn-login:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+    .btn-primary{padding:.5rem 1.25rem;background:var(--blue);color:#fff;font-size:.875rem;font-weight:600;border:none;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;font-family:inherit}
+    .btn-primary:hover{background:var(--blue-dark);box-shadow:0 4px 14px rgba(37,99,235,.4);transform:translateY(-1px)}
+
+    /* HERO */
+    .hero-wrap{position:relative;background:#fff;overflow:hidden}
+    .hero-wrap::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+    .hero-blob{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(37,99,235,.07) 0%,transparent 65%);top:-150px;right:-120px;pointer-events:none}
+    .hero-blob-2{position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(16,185,129,.05) 0%,transparent 65%);bottom:-80px;left:-80px;pointer-events:none}
+    .hero{max-width:1280px;margin:0 auto;padding:140px 2rem 100px;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--blue-light);color:var(--blue);font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:100px;border:1px solid var(--blue-mid);margin-bottom:1.5rem;letter-spacing:.3px}
+    .badge-dot{width:7px;height:7px;background:var(--emerald);border-radius:50%;animation:pulseDot 2s infinite}
+    @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    .hero-heading{font-size:clamp(2.2rem,4vw,3.1rem);font-weight:800;line-height:1.17;color:var(--dark);letter-spacing:-1.5px;margin-bottom:1.5rem}
+    .hero-heading em{font-style:normal;color:var(--blue)}
+    .hero-sub{font-size:1.05rem;color:var(--gray-text);line-height:1.75;margin-bottom:2.5rem;max-width:520px}
+    .hero-btns{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:3rem}
+    .btn-hero-p{display:inline-flex;align-items:center;gap:8px;padding:.875rem 2rem;background:var(--blue);color:#fff;font-size:.9375rem;font-weight:600;border:none;border-radius:var(--r-md);cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none;box-shadow:0 4px 20px rgba(37,99,235,.3)}
+    .btn-hero-p:hover{background:var(--blue-dark);box-shadow:0 6px 28px rgba(37,99,235,.45);transform:translateY(-2px)}
+    .btn-hero-s{display:inline-flex;align-items:center;gap:8px;padding:.875rem 2rem;background:#fff;color:var(--dark);font-size:.9375rem;font-weight:600;border:1.5px solid var(--gray-border);border-radius:var(--r-md);cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none}
+    .btn-hero-s:hover{border-color:var(--blue);color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+    .hero-trust{display:flex;align-items:center;gap:1.5rem}
+    .trust-avs{display:flex}
+    .trust-avs .av{width:32px;height:32px;border-radius:50%;border:2px solid #fff;margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff}
+    .trust-avs .av:first-child{margin-left:0}
+    .trust-text{font-size:.82rem;color:var(--gray-text)}
+    .trust-text strong{color:var(--dark);font-weight:600}
+
+    /* HERO VISUAL */
+    .hero-visual{position:relative;display:flex;align-items:center;justify-content:center}
+    .hero-svg-wrap{position:relative;width:100%;max-width:580px}
+    .float-card{position:absolute;background:#fff;border-radius:var(--r-md);box-shadow:var(--shadow-lg);padding:12px 16px;border:1px solid var(--gray-border);display:flex;align-items:center;gap:10px;font-size:.78rem;font-weight:600;color:var(--dark);z-index:10;animation:floatUD 4s ease-in-out infinite;white-space:nowrap}
+    .float-card:nth-child(2){animation-delay:-1.5s}
+    .float-card:nth-child(3){animation-delay:-3s}
+    @keyframes floatUD{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .fc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .fc-label{font-size:.7rem;color:var(--gray-text);font-weight:400}
+    .fc-1{top:6%;left:-9%}.fc-2{bottom:18%;left:-7%}.fc-3{top:8%;right:-7%}
+
+    /* SECTIONS */
+    section{padding:100px 2rem}
+    .section-inner{max-width:1280px;margin:0 auto}
+    .section-label{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;margin-bottom:1rem}
+    .section-label::before{content:'';display:block;width:20px;height:2px;background:var(--blue);border-radius:2px}
+    .section-heading{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;letter-spacing:-1px;color:var(--dark);line-height:1.2;margin-bottom:1rem}
+    .section-sub{font-size:1rem;color:var(--gray-text);line-height:1.7;max-width:560px}
+    .section-header{margin-bottom:4rem}
+    .section-header.center{text-align:center}
+    .section-header.center .section-sub{margin:0 auto}
+    .section-header.center .section-label{justify-content:center}
+    .section-header.center .section-label::before{display:none}
+
+    /* FEATURE CARDS */
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
+    .feature-card{background:#fff;border:1px solid var(--gray-border);border-radius:var(--r-lg);padding:2rem 1.75rem;transition:box-shadow .3s,transform .3s,border-color .3s;position:relative;overflow:hidden;cursor:default}
+    .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--emerald));transform:scaleX(0);transform-origin:left;transition:transform .35s ease;border-radius:3px 3px 0 0}
+    .feature-card:hover::before{transform:scaleX(1)}
+    .feature-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-5px);border-color:transparent}
+    .feature-icon{width:52px;height:52px;background:var(--blue-light);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;transition:background .3s}
+    .feature-card:hover .feature-icon{background:var(--blue)}
+    .feature-card:hover .feature-icon svg{color:#fff}
+    .feature-icon svg{color:var(--blue);transition:color .3s}
+    .feature-title{font-size:1.05rem;font-weight:700;color:var(--dark);margin-bottom:.6rem}
+    .feature-desc{font-size:.9rem;color:var(--gray-text);line-height:1.65}
+
+    /* WHY */
+    .why-section{background:var(--gray-bg)}
+    .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    .why-cards{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+    .why-card{background:#fff;border:1px solid var(--gray-border);border-radius:var(--r-md);padding:1.5rem;transition:box-shadow .25s,transform .25s}
+    .why-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+    .why-check{width:36px;height:36px;background:var(--emerald-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+    .why-title{font-size:.95rem;font-weight:700;color:var(--dark);margin-bottom:.4rem}
+    .why-text{font-size:.83rem;color:var(--gray-text);line-height:1.6}
+    .check-list{display:flex;flex-direction:column;gap:.75rem;margin-top:2rem}
+    .check-item{display:flex;align-items:center;gap:10px;font-size:.875rem;color:var(--gray-text)}
+
+    /* INDUSTRIES */
+    .industries-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.25rem}
+    .ind-card{background:#fff;border:1px solid var(--gray-border);border-radius:var(--r-md);padding:1.75rem 1.5rem;text-align:center;transition:box-shadow .25s,transform .25s,border-color .25s;cursor:default}
+    .ind-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:var(--blue)}
+    .ind-card:hover .ind-icon{background:var(--blue)}
+    .ind-card:hover .ind-icon svg{color:#fff}
+    .ind-icon{width:56px;height:56px;background:var(--gray-bg);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;transition:background .25s}
+    .ind-icon svg{color:var(--blue);transition:color .25s}
+    .ind-name{font-size:.9rem;font-weight:700;color:var(--dark)}
+
+    /* TECH */
+    .tech-section{background:var(--gray-bg)}
+    .tech-chips{display:flex;flex-wrap:wrap;gap:.875rem;justify-content:center}
+    .tech-chip{display:inline-flex;align-items:center;gap:8px;padding:.6rem 1.1rem;background:#fff;border:1px solid var(--gray-border);border-radius:100px;font-size:.875rem;font-weight:600;color:var(--dark);transition:all .2s;cursor:default}
+    .tech-chip:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--blue);color:var(--blue)}
+    .tech-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+    /* STATS */
+    .stats-section{background:linear-gradient(135deg,#1E3A8A 0%,#2563EB 55%,#1D4ED8 100%);position:relative;overflow:hidden}
+    .stats-section::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;position:relative}
+    .stat-card{text-align:center;padding:2.5rem 1.5rem;border-radius:var(--r-lg);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+    .stat-num{font-size:clamp(2.5rem,5vw,3.75rem);font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:.5rem;display:block}
+    .stat-label{font-size:.9rem;font-weight:500;color:rgba(255,255,255,.7);line-height:1.4}
+    .stat-divider{width:40px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;margin:1rem auto 0}
+
+    /* CTA */
+    .cta-section{background:var(--gray-bg)}
+    .cta-box{background:#fff;border:1px solid var(--gray-border);border-radius:var(--r-xl);padding:4.5rem 3rem;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+    .cta-box::before{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(37,99,235,.07) 0%,transparent 70%);border-radius:50%}
+    .cta-box::after{content:'';position:absolute;bottom:-80px;left:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(16,185,129,.05) 0%,transparent 70%);border-radius:50%}
+    .cta-heading{font-size:clamp(1.7rem,3vw,2.5rem);font-weight:800;letter-spacing:-.8px;color:var(--dark);margin-bottom:1rem}
+    .cta-sub{font-size:1rem;color:var(--gray-text);margin-bottom:2.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+    /* FOOTER */
+    footer{background:#1F2937;padding:5rem 2rem 2.5rem;color:rgba(255,255,255,.7)}
+    .footer-inner{max-width:1280px;margin:0 auto}
+    .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(255,255,255,.1)}
+    .footer-brand{max-width:280px}
+    .footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+    .footer-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:10px;display:flex;align-items:center;justify-content:center}
+    .footer-logo-text{font-size:1rem;font-weight:700;color:#fff}
+    .footer-logo-text span{color:#93C5FD}
+    .footer-desc{font-size:.875rem;line-height:1.75;margin-bottom:1.5rem}
+    .socials{display:flex;gap:.75rem}
+    .social-btn{width:36px;height:36px;background:rgba(255,255,255,.08);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .2s;cursor:pointer;text-decoration:none;border:none}
+    .social-btn:hover{background:var(--blue)}
+    .footer-col h4{font-size:.875rem;font-weight:700;color:#fff;margin-bottom:1.25rem}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.6rem}
+    .footer-col ul a{text-decoration:none;color:rgba(255,255,255,.6);font-size:.875rem;transition:color .2s}
+    .footer-col ul a:hover{color:#fff}
+    .footer-bottom{padding-top:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+    .footer-copy{font-size:.82rem}
+    .footer-badges{display:flex;gap:.75rem;align-items:center}
+    .f-badge{font-size:.75rem;padding:4px 10px;border:1px solid rgba(255,255,255,.15);border-radius:100px;color:rgba(255,255,255,.5)}
+
+    /* FADE ANIMATIONS */
+    .fi{opacity:0;transform:translateY(28px);transition:opacity .65s cubic-bezier(.25,.46,.45,.94),transform .65s cubic-bezier(.25,.46,.45,.94)}
+    .fi.v{opacity:1;transform:translateY(0)}
+    .fi.d1{transition-delay:.1s}.fi.d2{transition-delay:.2s}.fi.d3{transition-delay:.3s}.fi.d4{transition-delay:.4s}
+
+    /* RESPONSIVE */
+    @media(max-width:1024px){
+      .hero{grid-template-columns:1fr;gap:3.5rem;padding:120px 2rem 80px}
+      .why-grid{grid-template-columns:1fr}
+      .footer-top{grid-template-columns:1fr 1fr;gap:2rem}
+    }
+    @media(max-width:768px){
+      section{padding:70px 1.25rem}
+      .nav-links{display:none}
+      .hero{padding:108px 1.25rem 70px}
+      .why-cards{grid-template-columns:1fr}
+      .footer-top{grid-template-columns:1fr}
+      .footer-bottom{flex-direction:column;text-align:center}
+      .fc-2{display:none}
+      .fc-1{left:-2%}
+      .fc-3{right:-2%}
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo" id="nav-logo">
+      <div class="nav-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <span class="nav-logo-text">EdgeShield<span> AI</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#home" id="nav-home">Home</a></li>
+      <li><a href="#features" id="nav-features">Features</a></li>
+      <li><a href="#solutions" id="nav-solutions">Solutions</a></li>
+      <li><a href="#dashboard" id="nav-dashboard">Dashboard</a></li>
+      <li><a href="#pricing" id="nav-pricing">Pricing</a></li>
+      <li><a href="#about" id="nav-about">About</a></li>
+      <li><a href="#contact" id="nav-contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="/login" class="btn-login" id="btn-login" style="text-decoration:none;display:inline-block">Login</a>
+      <a href="/login" class="btn-primary" id="btn-get-started-nav" style="text-decoration:none;display:inline-block">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-wrap" id="home">
+  <div class="hero-blob"></div>
+  <div class="hero-blob-2"></div>
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge fi" id="hero-badge">
+        <span class="badge-dot"></span>
+        Trusted by 500+ Industrial Enterprises Worldwide
+      </div>
+      <h1 class="hero-heading fi d1" id="hero-h1">
+        Offline AI for <em>Smarter, Safer</em> &amp; Predictive Industrial Operations
+      </h1>
+      <p class="hero-sub fi d2" id="hero-sub">
+        EdgeShield AI predicts equipment failures, detects cyber threats, and optimizes industrial performance in real time&mdash;all without requiring cloud connectivity.
+      </p>
+      <div class="hero-btns fi d3">
+        <a href="/login" class="btn-hero-p" id="btn-hero-gs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          Get Started
+        </a>
+        <a href="/login" class="btn-hero-s" id="btn-hero-demo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Live Demo
+        </a>
+      </div>
+      <div class="hero-trust fi d4">
+        <div class="trust-avs">
+          <div class="av" style="background:linear-gradient(135deg,#93C5FD,#2563EB)">JK</div>
+          <div class="av" style="background:linear-gradient(135deg,#6EE7B7,#10B981)">SM</div>
+          <div class="av" style="background:linear-gradient(135deg,#FCA5A5,#EF4444)">AR</div>
+          <div class="av" style="background:linear-gradient(135deg,#C4B5FD,#7C3AED)">PL</div>
+        </div>
+        <p class="trust-text"><strong>4,200+ engineers</strong> rely on EdgeShield AI</p>
+      </div>
+    </div>
+    <div class="hero-visual fi d2" id="hero-visual">
+      <div class="hero-svg-wrap">
+        <div class="float-card fc-1" id="fc1">
+          <div class="fc-icon" style="background:#ECFDF5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <div><div>Prediction Accuracy</div><div class="fc-label">+99.2% this week</div></div>
+        </div>
+        <div class="float-card fc-2" id="fc2">
+          <div class="fc-icon" style="background:#EFF6FF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div><div>Threats Blocked</div><div class="fc-label">3 anomalies detected</div></div>
+        </div>
+        <div class="float-card fc-3" id="fc3">
+          <div class="fc-icon" style="background:#FFF7ED">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div><div>Energy Saved</div><div class="fc-label">25% reduction today</div></div>
+        </div>
+        <svg viewBox="0 0 560 460" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" style="filter:drop-shadow(0 20px 60px rgba(37,99,235,.15))">
+          <defs>
+            <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient>
+            <filter id="cardShadow"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#2563EB" flood-opacity="0.08"/></filter>
+          </defs>
+          <rect width="560" height="460" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="url(#cardShadow)"/>
+          <rect width="560" height="48" rx="20" fill="white"/>
+          <rect y="28" width="560" height="20" fill="white"/>
+          <circle cx="24" cy="24" r="5" fill="#EF4444"/>
+          <circle cx="40" cy="24" r="5" fill="#F59E0B"/>
+          <circle cx="56" cy="24" r="5" fill="#10B981"/>
+          <rect x="72" y="16" width="168" height="16" rx="8" fill="#F1F5F9"/>
+          <text x="88" y="27" font-family="Inter,sans-serif" font-size="8.5" fill="#94A3B8" font-weight="500">EdgeShield AI Dashboard</text>
+          <rect x="456" y="14" width="88" height="20" rx="10" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="1"/>
+          <circle cx="472" cy="24" r="4" fill="#10B981"/>
+          <circle cx="472" cy="24" r="7" fill="#10B981" opacity=".2"/>
+          <text x="482" y="28" font-family="Inter,sans-serif" font-size="8" fill="#2563EB" font-weight="700">LIVE</text>
+          <rect x="0" y="48" width="88" height="412" fill="#F8FAFC"/>
+          <rect x="8" y="64" width="72" height="28" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <rect x="16" y="74" width="8" height="8" rx="2" fill="#2563EB"/>
+          <rect x="28" y="76" width="36" height="4" rx="2" fill="#2563EB"/>
+          <rect x="8" y="98" width="72" height="28" rx="8"/>
+          <rect x="16" y="108" width="8" height="8" rx="2" fill="#CBD5E1"/>
+          <rect x="28" y="110" width="30" height="4" rx="2" fill="#CBD5E1"/>
+          <rect x="8" y="132" width="72" height="28" rx="8"/>
+          <rect x="16" y="142" width="8" height="8" rx="2" fill="#CBD5E1"/>
+          <rect x="28" y="144" width="36" height="4" rx="2" fill="#CBD5E1"/>
+          <rect x="8" y="166" width="72" height="28" rx="8"/>
+          <rect x="16" y="176" width="8" height="8" rx="2" fill="#CBD5E1"/>
+          <rect x="28" y="178" width="28" height="4" rx="2" fill="#CBD5E1"/>
+          <rect x="8" y="200" width="72" height="28" rx="8"/>
+          <rect x="16" y="210" width="8" height="8" rx="2" fill="#CBD5E1"/>
+          <rect x="28" y="212" width="32" height="4" rx="2" fill="#CBD5E1"/>
+          <rect x="100" y="58" width="100" height="58" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <rect x="110" y="68" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
+          <text x="110" y="102" font-family="Inter,sans-serif" font-size="16" font-weight="800" fill="#111827">99.2%</text>
+          <rect x="110" y="106" width="24" height="4" rx="2" fill="#10B981" opacity=".5"/>
+          <rect x="208" y="58" width="100" height="58" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <rect x="218" y="68" width="40" height="5" rx="2.5" fill="#CBD5E1"/>
+          <text x="218" y="102" font-family="Inter,sans-serif" font-size="16" font-weight="800" fill="#111827">40%</text>
+          <rect x="218" y="106" width="24" height="4" rx="2" fill="#2563EB" opacity=".5"/>
+          <rect x="316" y="58" width="100" height="58" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <rect x="326" y="68" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
+          <text x="326" y="102" font-family="Inter,sans-serif" font-size="16" font-weight="800" fill="#111827">25%</text>
+          <rect x="326" y="106" width="24" height="4" rx="2" fill="#F97316" opacity=".5"/>
+          <rect x="424" y="58" width="124" height="58" rx="10" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="1"/>
+          <rect x="434" y="68" width="28" height="5" rx="2.5" fill="#BFDBFE"/>
+          <text x="434" y="102" font-family="Inter,sans-serif" font-size="16" font-weight="800" fill="#2563EB">100%</text>
+          <text x="434" y="112" font-family="Inter,sans-serif" font-size="7" fill="#60A5FA" font-weight="600">OFFLINE ACTIVE</text>
+          <rect x="100" y="126" width="276" height="148" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="114" y="143" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="#1E293B">Predictive Analysis</text>
+          <text x="114" y="156" font-family="Inter,sans-serif" font-size="7.5" fill="#94A3B8">Machine Failure Probability</text>
+          <line x1="114" y1="198" x2="366" y2="198" stroke="#F1F5F9" stroke-width="1"/>
+          <line x1="114" y1="216" x2="366" y2="216" stroke="#F1F5F9" stroke-width="1"/>
+          <line x1="114" y1="234" x2="366" y2="234" stroke="#F1F5F9" stroke-width="1"/>
+          <line x1="114" y1="252" x2="366" y2="252" stroke="#F1F5F9" stroke-width="1"/>
+          <path d="M114 255 C130 245 148 225 168 238 C188 251 208 218 228 208 C248 198 268 233 290 218 C312 203 332 188 352 193 L352 268 L114 268 Z" fill="url(#blueGrad)" opacity=".35"/>
+          <path d="M114 255 C130 245 148 225 168 238 C188 251 208 218 228 208 C248 198 268 233 290 218 C312 203 332 188 352 193" stroke="#2563EB" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="228" cy="208" r="5" fill="#EF4444"/>
+          <circle cx="228" cy="208" r="10" stroke="#EF4444" stroke-width="1.5" opacity=".3"/>
+          <rect x="214" y="188" width="38" height="14" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+          <text x="233" y="198" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#EF4444" font-weight="700">ALERT</text>
+          <path d="M114 262 C140 257 162 267 186 260 C210 253 226 272 252 267 C278 262 304 272 328 264 C344 259 354 265 362 260" stroke="#10B981" stroke-width="1.5" fill="none" stroke-dasharray="4 2.5" stroke-linecap="round"/>
+          <rect x="384" y="126" width="164" height="148" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="398" y="143" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#1E293B">Factory Twin</text>
+          <rect x="396" y="224" width="28" height="38" rx="2" fill="#E2E8F0"/>
+          <rect x="396" y="214" width="28" height="12" rx="1" fill="#CBD5E1"/>
+          <rect x="428" y="204" width="40" height="58" rx="2" fill="#E2E8F0"/>
+          <rect x="428" y="194" width="40" height="12" rx="1" fill="#CBD5E1"/>
+          <rect x="472" y="218" width="24" height="44" rx="2" fill="#E2E8F0"/>
+          <rect x="472" y="208" width="24" height="12" rx="1" fill="#CBD5E1"/>
+          <rect x="401" y="198" width="6" height="18" rx="3" fill="#94A3B8"/>
+          <rect x="411" y="204" width="5" height="12" rx="2.5" fill="#94A3B8"/>
+          <rect x="440" y="182" width="6" height="24" rx="3" fill="#94A3B8"/>
+          <rect x="452" y="187" width="5" height="19" rx="2.5" fill="#94A3B8"/>
+          <rect x="477" y="199" width="5" height="11" rx="2.5" fill="#94A3B8"/>
+          <rect x="392" y="261" width="148" height="3" rx="1.5" fill="#E2E8F0"/>
+          <circle cx="482" cy="178" r="22" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="1.5"/>
+          <path d="M482 166 c0 0 9 3 9 9 l0 5 c0 5-4 9-9 11 c-5-2-9-6-9-11 l0-5 c0-6 9-9 9-9 z" fill="#2563EB"/>
+          <path d="M477 177 l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M430 235 Q416 230 410 220" stroke="#2563EB" stroke-width="1" stroke-dasharray="3 2" opacity=".5" fill="none"/>
+          <circle cx="410" cy="220" r="2.5" fill="#2563EB" opacity=".7"/>
+          <rect x="392" y="150" width="80" height="42" rx="8" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="1.5"/>
+          <text x="432" y="164" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#2563EB" font-weight="700">EDGE AI NODE</text>
+          <rect x="400" y="169" width="56" height="4" rx="2" fill="#BFDBFE"/>
+          <rect x="400" y="176" width="40" height="4" rx="2" fill="#BFDBFE" opacity=".6"/>
+          <circle cx="458" cy="163" r="5" fill="#10B981"/>
+          <circle cx="458" cy="163" r="9" stroke="#10B981" stroke-width="1" opacity=".25"/>
+          <rect x="100" y="284" width="448" height="98" rx="10" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="114" y="302" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="#1E293B">Machine Health Monitor</text>
+          <rect x="110" y="310" width="80" height="52" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="120" y="323" font-family="Inter,sans-serif" font-size="7" fill="#475569" font-weight="600">Motor A1</text>
+          <rect x="118" y="334" width="64" height="8" rx="4" fill="#E2E8F0"/>
+          <rect x="118" y="334" width="58" height="8" rx="4" fill="#10B981" opacity=".8"/>
+          <text x="118" y="354" font-family="Inter,sans-serif" font-size="6.5" fill="#10B981" font-weight="600">Healthy 94%</text>
+          <rect x="198" y="310" width="80" height="52" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="208" y="323" font-family="Inter,sans-serif" font-size="7" fill="#475569" font-weight="600">Pump B2</text>
+          <rect x="206" y="334" width="64" height="8" rx="4" fill="#E2E8F0"/>
+          <rect x="206" y="334" width="40" height="8" rx="4" fill="#F59E0B" opacity=".9"/>
+          <text x="206" y="354" font-family="Inter,sans-serif" font-size="6.5" fill="#F59E0B" font-weight="600">Warning 62%</text>
+          <rect x="286" y="310" width="80" height="52" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="296" y="323" font-family="Inter,sans-serif" font-size="7" fill="#475569" font-weight="600">Turbine C</text>
+          <rect x="294" y="334" width="64" height="8" rx="4" fill="#E2E8F0"/>
+          <rect x="294" y="334" width="58" height="8" rx="4" fill="#10B981" opacity=".8"/>
+          <text x="294" y="354" font-family="Inter,sans-serif" font-size="6.5" fill="#10B981" font-weight="600">Healthy 91%</text>
+          <rect x="374" y="310" width="80" height="52" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+          <text x="384" y="323" font-family="Inter,sans-serif" font-size="7" fill="#475569" font-weight="600">Compressor</text>
+          <rect x="382" y="334" width="64" height="8" rx="4" fill="#E2E8F0"/>
+          <rect x="382" y="334" width="18" height="8" rx="4" fill="#EF4444" opacity=".9"/>
+          <text x="382" y="354" font-family="Inter,sans-serif" font-size="6.5" fill="#EF4444" font-weight="600">CRITICAL 27%</text>
+          <rect x="462" y="310" width="74" height="52" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="472" y="323" font-family="Inter,sans-serif" font-size="7" fill="#475569" font-weight="600">Conveyor</text>
+          <rect x="470" y="334" width="58" height="8" rx="4" fill="#E2E8F0"/>
+          <rect x="470" y="334" width="48" height="8" rx="4" fill="#10B981" opacity=".8"/>
+          <text x="470" y="354" font-family="Inter,sans-serif" font-size="6.5" fill="#10B981" font-weight="600">Healthy 85%</text>
+          <rect x="100" y="392" width="448" height="42" rx="10" fill="#1E3A8A"/>
+          <circle cx="118" cy="413" r="4.5" fill="#10B981"/>
+          <circle cx="118" cy="413" r="8" fill="#10B981" opacity=".2"/>
+          <text x="130" y="417" font-family="Inter,sans-serif" font-size="8" fill="white" font-weight="600">OFFLINE MODE ACTIVE</text>
+          <text x="254" y="417" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,.7)">EdgeShield AI v3.2</text>
+          <text x="362" y="417" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,.7)">5 Machines - 1 Alert</text>
+          <rect x="464" y="404" width="72" height="18" rx="9" fill="#2563EB"/>
+          <text x="500" y="416" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.5" fill="white" font-weight="600">View Report</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="features" style="background:var(--gray-bg)">
+  <div class="section-inner">
+    <div class="section-header center fi" id="feat-header">
+      <div class="section-label">Core Capabilities</div>
+      <h2 class="section-heading">Built for Industrial Intelligence</h2>
+      <p class="section-sub">Four pillars of AI-powered protection and optimization running at the edge, offline, in real time.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fi d1" id="feat-predictive">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3 class="feature-title">Predictive Maintenance</h3>
+        <p class="feature-desc">Predict equipment failures before they cause costly downtime. EdgeShield AI analyzes vibration, temperature, and sensor patterns using on-device machine learning models trained for your specific machines.</p>
+      </div>
+      <div class="feature-card fi d2" id="feat-cyber">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3 class="feature-title">Cybersecurity</h3>
+        <p class="feature-desc">Detect abnormal industrial network behavior instantly. Identify OT/IT threats, unauthorized access, and anomalous traffic patterns in your SCADA and PLC systems before they escalate into incidents.</p>
+      </div>
+      <div class="feature-card fi d3" id="feat-energy">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <h3 class="feature-title">Energy Optimization</h3>
+        <p class="feature-desc">Reduce energy consumption with AI-generated recommendations. Identify load inefficiencies in real time and automatically schedule machines for peak performance with minimal power usage.</p>
+      </div>
+      <div class="feature-card fi d4" id="feat-offline">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+        <h3 class="feature-title">Offline Intelligence</h3>
+        <p class="feature-desc">Continue full AI monitoring and inference without internet connectivity. All models run locally on your edge hardware, no cloud dependency, no latency, no data exposure.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solutions">
+  <div class="section-inner">
+    <div class="why-grid">
+      <div>
+        <div class="section-label fi">Why Choose Us</div>
+        <h2 class="section-heading fi d1">Why EdgeShield AI?</h2>
+        <p class="section-sub fi d2">We bring enterprise-grade AI capabilities directly to the factory floor, no cloud, no compromises. Purpose-built for the demands of critical industrial infrastructure.</p>
+        <div class="check-list fi d3">
+          <div class="check-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>ISO 27001 and IEC 62443 compliant architecture</div>
+          <div class="check-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Supports NVIDIA Jetson, Raspberry Pi, and x86 edge nodes</div>
+          <div class="check-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sub-50ms on-device inference latency</div>
+          <div class="check-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Deploy in under 48 hours with zero production disruption</div>
+        </div>
+      </div>
+      <div class="why-cards">
+        <div class="why-card fi d1" id="why-c1">
+          <div class="why-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h4 class="why-title">AI at the Edge</h4>
+          <p class="why-text">All inference runs locally on industrial hardware. Zero cloud dependency for every real-time decision.</p>
+        </div>
+        <div class="why-card fi d2" id="why-c2">
+          <div class="why-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h4 class="why-title">Real-Time Monitoring</h4>
+          <p class="why-text">Continuous sensor stream analysis with sub-50ms latency. Catch anomalies the moment they emerge.</p>
+        </div>
+        <div class="why-card fi d3" id="why-c3">
+          <div class="why-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h4 class="why-title">Secure Industrial Intelligence</h4>
+          <p class="why-text">Data never leaves your facility. Encrypted on-device processing meets strict IEC 62443 requirements.</p>
+        </div>
+        <div class="why-card fi d4" id="why-c4">
+          <div class="why-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h4 class="why-title">Low Deployment Cost</h4>
+          <p class="why-text">No expensive cloud infrastructure. Runs on affordable edge nodes with minimal operational overhead.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" style="background:var(--gray-bg)">
+  <div class="section-inner">
+    <div class="section-header center fi" id="ind-header">
+      <div class="section-label">Industries Served</div>
+      <h2 class="section-heading">Trusted Across Critical Industries</h2>
+      <p class="section-sub">From automotive assembly lines to offshore oil platforms, EdgeShield AI is engineered for the worlds harshest industrial environments.</p>
+    </div>
+    <div class="industries-grid">
+      <div class="ind-card fi d1" id="ind-mfg"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M5 20V8l7-6 7 6v12"/><rect x="9" y="14" width="6" height="6"/></svg></div><div class="ind-name">Manufacturing</div></div>
+      <div class="ind-card fi d2" id="ind-auto"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-3"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div><div class="ind-name">Automotive</div></div>
+      <div class="ind-card fi d3" id="ind-aero"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div><div class="ind-name">Aerospace</div></div>
+      <div class="ind-card fi d4" id="ind-mach"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M17.66 17.66l-1.41-1.41M6.34 17.66l1.41-1.41"/></svg></div><div class="ind-name">Heavy Machinery</div></div>
+      <div class="ind-card fi d1" id="ind-oil"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8M8 6l4-4 4 4M6 12a6 6 0 0 0 12 0"/><line x1="3" y1="22" x2="21" y2="22"/><line x1="8" y1="22" x2="8" y2="18"/><line x1="16" y1="22" x2="16" y2="18"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></div><div class="ind-name">Oil and Gas</div></div>
+      <div class="ind-card fi d2" id="ind-smart"><div class="ind-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div><div class="ind-name">Smart Factories</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="tech-section" id="dashboard">
+  <div class="section-inner">
+    <div class="section-header center fi" id="tech-header">
+      <div class="section-label">Technology Stack</div>
+      <h2 class="section-heading">Built on Proven Technologies</h2>
+      <p class="section-sub">An open-standards enterprise-grade technology foundation, reliable, interoperable, and battle-tested across hundreds of production deployments.</p>
+    </div>
+    <div class="tech-chips fi d1" id="tech-chips">
+      <div class="tech-chip" id="tc-react"><span class="tech-dot" style="background:#61DAFB"></span>React</div>
+      <div class="tech-chip" id="tc-fastapi"><span class="tech-dot" style="background:#009688"></span>FastAPI</div>
+      <div class="tech-chip" id="tc-python"><span class="tech-dot" style="background:#3776AB"></span>Python</div>
+      <div class="tech-chip" id="tc-tflite"><span class="tech-dot" style="background:#FF6F00"></span>TensorFlow Lite</div>
+      <div class="tech-chip" id="tc-sqlite"><span class="tech-dot" style="background:#003B57"></span>SQLite</div>
+      <div class="tech-chip" id="tc-ws"><span class="tech-dot" style="background:#2563EB"></span>WebSocket</div>
+      <div class="tech-chip" id="tc-docker"><span class="tech-dot" style="background:#2496ED"></span>Docker</div>
+      <div class="tech-chip" id="tc-onnx"><span class="tech-dot" style="background:#888"></span>ONNX Runtime</div>
+    </div>
+  </div>
+</section>
+
+<section class="stats-section" id="pricing">
+  <div class="section-inner">
+    <div class="section-header center fi" id="stats-header" style="margin-bottom:3.5rem">
+      <div class="section-label" style="color:rgba(255,255,255,.65);justify-content:center">Customer Benefits</div>
+      <h2 class="section-heading" style="color:#fff">Results That Speak for Themselves</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,.65);margin:0 auto">Measurable outcomes from EdgeShield AI deployments across global industrial facilities.</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card fi d1" id="stat-1"><span class="stat-num" data-target="99.2" data-suffix="%" id="sn1">0%</span><div class="stat-label">Prediction Accuracy</div><div class="stat-divider"></div></div>
+      <div class="stat-card fi d2" id="stat-2"><span class="stat-num" data-target="40" data-suffix="%" id="sn2">0%</span><div class="stat-label">Reduction in Downtime</div><div class="stat-divider"></div></div>
+      <div class="stat-card fi d3" id="stat-3"><span class="stat-num" data-target="25" data-suffix="%" id="sn3">0%</span><div class="stat-label">Energy Savings</div><div class="stat-divider"></div></div>
+      <div class="stat-card fi d4" id="stat-4"><span class="stat-num" data-target="100" data-suffix="%" id="sn4">0%</span><div class="stat-label">Offline Operation</div><div class="stat-divider"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="contact">
+  <div class="section-inner">
+    <div class="cta-box fi" id="cta-box">
+      <div class="section-label" style="justify-content:center;margin-bottom:1.25rem">Get Started Today</div>
+      <h2 class="cta-heading">Ready to Secure Your Industrial Operations?</h2>
+      <p class="cta-sub">Join 500+ enterprises already using EdgeShield AI to protect, predict, and optimize their industrial infrastructure, all at the edge.</p>
+      <div class="cta-btns">
+        <a href="/login" class="btn-hero-p" id="btn-cta-gs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>Get Started Free</a>
+        <a href="/login" class="btn-hero-s" id="btn-cta-sales"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Talk to Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <span class="footer-logo-text">EdgeShield<span> AI</span></span>
+        </div>
+        <p class="footer-desc">Offline AI for smarter, safer, and predictive industrial operations. Trusted by global enterprises across 40+ countries.</p>
+        <div class="socials">
+          <a href="#" class="social-btn" id="ft-linkedin"><svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="#" class="social-btn" id="ft-twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg></a>
+          <a href="#" class="social-btn" id="ft-github"><svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></a>
+          <a href="#" class="social-btn" id="ft-youtube"><svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.45A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 0 0 1.95-1.97A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#1F2937"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#home" id="fl-home">Home</a></li>
+          <li><a href="#features" id="fl-features">Features</a></li>
+          <li><a href="#solutions" id="fl-solutions">Solutions</a></li>
+          <li><a href="#pricing" id="fl-pricing">Pricing</a></li>
+          <li><a href="#about" id="fl-about">About</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#" id="fl-docs">Documentation</a></li>
+          <li><a href="#" id="fl-api">API Reference</a></li>
+          <li><a href="#" id="fl-blog">Blog</a></li>
+          <li><a href="#" id="fl-wp">Whitepapers</a></li>
+          <li><a href="#" id="fl-cs">Case Studies</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@edgeshield.ai" id="fl-email">hello@edgeshield.ai</a></li>
+          <li><a href="#" id="fl-support">Support Portal</a></li>
+          <li><a href="#" id="fl-partners">Partner Program</a></li>
+          <li><a href="#" id="fl-careers">Careers</a></li>
+          <li><a href="#" id="fl-press">Press and Media</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">2026 EdgeShield AI Technologies. All rights reserved.</p>
+      <div class="footer-badges">
+        <span class="f-badge">ISO 27001</span>
+        <span class="f-badge">IEC 62443</span>
+        <span class="f-badge">SOC 2 Type II</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const nb = document.getElementById('navbar');
+  window.addEventListener('scroll', () => nb.classList.toggle('scrolled', scrollY > 20), {passive:true});
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fi').forEach(el => io.observe(el));
+  setTimeout(() => { document.querySelectorAll('.hero .fi, .hero-wrap .fi').forEach(el => el.classList.add('v')); }, 80);
+  const sio = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = parseFloat(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const dec = String(target).includes('.');
+      const dur = 2200;
+      const t0 = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - t0) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = (dec ? (target * ease).toFixed(1) : Math.round(target * ease)) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      sio.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-num[data-target]').forEach(el => sio.observe(el));
+</script>
+</body>
+</html>

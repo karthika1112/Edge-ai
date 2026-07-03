@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=sqlite:///./edgeshield.db
