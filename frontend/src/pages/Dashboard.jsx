@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-const API_URL = import.meta.env.VITE_API_URL || "${API_URL}";
-const WS_URL = API_URL.replace(/^http/, "ws");
+import { API_URL, WS_URL } from '../config/api';
 
 // Pre-defined realistic machine telemetry data with extra fields for all modules
 const INITIAL_MACHINES = [
@@ -78,6 +77,7 @@ export const Dashboard = () => {
   // Sidebar navigation tabs
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard'); 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Role-Based dynamic routing redirection useEffect
   useEffect(() => {
@@ -1707,10 +1707,22 @@ export const Dashboard = () => {
   const isAuthorized = allowedTabs.includes(activeTab);
 
   return (
-    <div className="min-h-screen bg-dark-50 text-dark-900 flex font-sans overflow-hidden">
+    <div className="min-h-screen bg-white text-dark-900 flex font-sans overflow-hidden">
       
+      {/* ─── Mobile Sidebar Overlay ─── */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-dark-900/60 z-35 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* ─── Collapsible Left Sidebar ─── */}
-      <aside className={`bg-white border-r border-dark-200 flex flex-col justify-between transition-smooth z-35 select-none ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+      <aside 
+        className={`bg-white border-r border-dark-200 flex flex-col justify-between transition-smooth z-40 select-none
+          fixed inset-y-0 left-0 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:relative md:translate-x-0 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'} w-64`}
+      >
         <div>
           {/* Brand header */}
           <div className="h-16 border-b border-dark-200 px-4 flex items-center justify-between">
@@ -1718,14 +1730,15 @@ export const Dashboard = () => {
               <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center shadow-md flex-shrink-0">
                 <Shield className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
               </div>
-              {!sidebarCollapsed && (
-                <span className="font-bold text-sm tracking-tight text-dark-900 whitespace-nowrap">
-                  EdgeShield <span className="text-primary-600">AI</span>
-                </span>
-              )}
+              <span className="font-bold text-sm tracking-tight text-dark-900 whitespace-nowrap">
+                EdgeShield <span className="text-primary-600">AI</span>
+              </span>
             </div>
-            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="p-1.5 hover:bg-dark-50 rounded-lg text-dark-500">
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="hidden md:block p-1.5 hover:bg-dark-50 rounded-lg text-dark-500">
               <Menu className="w-4 h-4" />
+            </button>
+            <button onClick={() => setMobileMenuOpen(false)} className="block md:hidden p-1.5 hover:bg-dark-50 rounded-lg text-dark-500">
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
 
@@ -1746,15 +1759,16 @@ export const Dashboard = () => {
                     setPmViewMode('list'); 
                     setCyViewMode('list');
                     setSearchTerm('');
+                    setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold transition-smooth ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-sm md:text-xs font-bold transition-smooth min-h-[48px] md:min-h-0 ${
                     isActive 
                       ? 'bg-primary-600 text-white shadow-md shadow-primary-600/10' 
                       : 'text-gray-text hover:bg-primary-50 hover:text-primary-600'
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
+                  <Icon className="w-5 h-5 md:w-4.5 md:h-4.5 flex-shrink-0" />
+                  <span>{item.label}</span>
                 </button>
               );
             })}
@@ -1763,9 +1777,9 @@ export const Dashboard = () => {
 
         {/* User logout */}
         <div className="p-3 border-t border-dark-200">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition-smooth">
-            <LogOut className="w-4.5 h-4.5 flex-shrink-0" />
-            {!sidebarCollapsed && <span>Logout</span>}
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 rounded-xl text-sm md:text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition-smooth min-h-[48px] md:min-h-0">
+            <LogOut className="w-5 h-5 md:w-4.5 md:h-4.5 flex-shrink-0" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -1774,32 +1788,39 @@ export const Dashboard = () => {
       <div className="flex-1 flex flex-col h-screen overflow-y-auto">
         
         {/* Sticky Header Nav */}
-        <header className="h-16 bg-white border-b border-dark-200 sticky top-0 z-20 px-6 flex items-center justify-between flex-shrink-0 font-sans">
-          <div>
-            <div className="text-[10px] text-gray-text font-semibold flex items-center gap-1 mb-0.5 select-none">
-              <span>Detroit Smart Assembly</span>
-              <ChevronRight className="w-2.5 h-2.5" />
-              <span>Operations</span>
-              <ChevronRight className="w-2.5 h-2.5" />
-              <span className="text-primary-600 font-bold">{activeTab}</span>
+        <header className="h-16 bg-white border-b border-dark-200 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between flex-shrink-0 font-sans">
+          <div className="flex items-center">
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              className="md:hidden p-2.5 hover:bg-dark-50 rounded-xl text-dark-600 mr-2 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              title="Open Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div>
+              <div className="hidden sm:flex text-[10px] text-gray-text font-semibold items-center gap-1 mb-0.5 select-none">
+                <span>Detroit Smart Assembly</span>
+                <ChevronRight className="w-2.5 h-2.5" />
+                <span>Operations</span>
+                <ChevronRight className="w-2.5 h-2.5" />
+                <span className="text-primary-600 font-bold">{activeTab}</span>
+              </div>
+              <h1 className="text-sm font-extrabold text-dark-900 tracking-tight flex items-center gap-2">
+                {activeTab === 'Dashboard' ? 'Console Overview' : activeTab}
+                <span className="bg-primary-50 text-primary-600 text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider hidden sm:inline-block">
+                  Edge AI
+                </span>
+              </h1>
             </div>
-            <h1 className="text-sm font-extrabold text-dark-900 tracking-tight flex items-center gap-2">
-              {activeTab === 'Dashboard' ? 'Console Overview' : activeTab}
-              <span className="bg-primary-50 text-primary-600 text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                Edge AI
-              </span>
-            </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {isBackendConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide">
-                  Edge AI Synced ({edgeStatus?.mode || 'local'})
-                </span>
-              </div>
+              <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide hidden sm:inline-block">
+                Edge AI Synced ({edgeStatus?.mode || 'local'})
+              </span>
             ) : (
-              <span className="bg-amber-50 border border-amber-200 text-amber-800 text-[9px] px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide animate-pulse">
+              <span className="bg-amber-50 border border-amber-200 text-amber-800 text-[9px] px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide animate-pulse hidden sm:inline-block">
                 Offline Mode Active (Local Fallback)
               </span>
             )}
@@ -1932,7 +1953,7 @@ export const Dashboard = () => {
         </AnimatePresence>
 
         {/* ─── Tab Content Workspace Body ─── */}
-        <main className="flex-1 p-6 space-y-6 overflow-y-auto bg-dark-50/50">
+        <main className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto bg-white">
 
           {!isAuthorized ? (
             <div className="min-h-[400px] flex flex-col items-center justify-center text-center space-y-4 font-sans bg-white border border-dark-200 rounded-3xl p-8 shadow-sm">
@@ -2461,7 +2482,7 @@ export const Dashboard = () => {
                 </div>
 
                 {/* SOC KPIs Dashboard */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   <div className="bg-white border border-dark-200 rounded-2xl p-4 shadow-sm">
                     <span className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Overall Security Score</span>
                     <span className="text-xl font-black text-emerald-600 mt-1 block">98% Secure</span>
@@ -2850,7 +2871,7 @@ export const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-semibold text-dark-800">
                   <div className="space-y-1">
                     <label className="text-[9px] text-gray-text uppercase block font-bold">Report Category</label>
-                    <select value={repSelectedType} onChange={(e) => setRepSelectedType(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white">
+                    <select value={repSelectedType} onChange={(e) => setRepSelectedType(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth">
                       <option value="Executive Summary">Executive Summary</option>
                       <option value="Machine Telemetry logs">Machine Telemetry logs</option>
                       <option value="Cybersecurity threat audits">Cybersecurity threat audits</option>
@@ -2859,7 +2880,7 @@ export const Dashboard = () => {
 
                   <div className="space-y-1">
                     <label className="text-[9px] text-gray-text uppercase block font-bold">Export Format</label>
-                    <select value={repSelectedFormat} onChange={(e) => setRepSelectedFormat(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white">
+                    <select value={repSelectedFormat} onChange={(e) => setRepSelectedFormat(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth">
                       <option value="PDF">PDF Sheet</option>
                       <option value="Excel">Excel Spreadsheet</option>
                       <option value="CSV">Comma Separated CSV</option>
@@ -3093,11 +3114,11 @@ export const Dashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-dark-800">
                       <div className="space-y-1">
                         <label className="text-[9px] text-gray-text uppercase block font-bold">Factory Name</label>
-                        <input type="text" value={factoryName} onChange={(e) => setFactoryName(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white" />
+                        <input type="text" value={factoryName} onChange={(e) => setFactoryName(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] text-gray-text uppercase block font-bold">Timezone Location</label>
-                        <input type="text" value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white" />
+                        <input type="text" value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs font-semibold outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth" />
                       </div>
                     </div>
                   </div>
@@ -3584,7 +3605,7 @@ export const Dashboard = () => {
                         value={factorySearch}
                         onChange={(e) => setFactorySearch(e.target.value)}
                         placeholder="Search name or code..."
-                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white"
+                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth"
                       />
                     </div>
                     <div className="space-y-1">
@@ -3592,7 +3613,7 @@ export const Dashboard = () => {
                       <select 
                         value={factoryFilterLocation}
                         onChange={(e) => setFactoryFilterLocation(e.target.value)}
-                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white"
+                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth"
                       >
                         <option value="All">All Locations</option>
                         <option value="USA">USA</option>
@@ -3605,7 +3626,7 @@ export const Dashboard = () => {
                       <select 
                         value={factoryFilterStatus}
                         onChange={(e) => setFactoryFilterStatus(e.target.value)}
-                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white"
+                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth"
                       >
                         <option value="All">All Statuses</option>
                         <option value="Healthy">Healthy (Green)</option>
@@ -3618,7 +3639,7 @@ export const Dashboard = () => {
                       <select 
                         value={factorySortKey}
                         onChange={(e) => setFactorySortKey(e.target.value)}
-                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white"
+                        className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 text-xs outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth"
                       >
                         <option value="name">Factory Name (A-Z)</option>
                         <option value="health">Health score (Highest)</option>
@@ -3637,15 +3658,15 @@ export const Dashboard = () => {
                         <form onSubmit={handleAddFactory} className="space-y-3.5 text-xs font-bold text-dark-850">
                           <div className="space-y-1">
                             <label className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Factory Name</label>
-                            <input type="text" value={newFactoryName} onChange={(e) => setNewFactoryName(e.target.value)} required placeholder="e.g. Detroit Assembly Hub" className="w-full border rounded-xl px-3 py-2 bg-dark-50 focus:bg-white outline-none" />
+                            <input type="text" value={newFactoryName} onChange={(e) => setNewFactoryName(e.target.value)} required placeholder="e.g. Detroit Assembly Hub" className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth" />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Unique Factory Code</label>
-                            <input type="text" value={newFactoryCode} onChange={(e) => setNewFactoryCode(e.target.value)} required placeholder="e.g. FAC-DET4" className="w-full border rounded-xl px-3 py-2 bg-dark-50 focus:bg-white outline-none" />
+                            <input type="text" value={newFactoryCode} onChange={(e) => setNewFactoryCode(e.target.value)} required placeholder="e.g. FAC-DET4" className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth" />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Geographic Location</label>
-                            <input type="text" value={newFactoryLoc} onChange={(e) => setNewFactoryLoc(e.target.value)} placeholder="e.g. Michigan, USA" className="w-full border rounded-xl px-3 py-2 bg-dark-50 focus:bg-white outline-none" />
+                            <input type="text" value={newFactoryLoc} onChange={(e) => setNewFactoryLoc(e.target.value)} placeholder="e.g. Michigan, USA" className="w-full border border-dark-200 rounded-xl px-3 py-2 bg-dark-50 outline-none focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-smooth" />
                           </div>
                           <button type="submit" className="w-full py-2 bg-primary-600 text-white rounded-xl font-bold shadow-md shadow-primary-600/10 hover:bg-primary-700 transition-smooth">Register Factory Node</button>
                         </form>
@@ -3746,7 +3767,7 @@ export const Dashboard = () => {
                 </div>
 
                 {/* Operations KPIs */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                   <div className="bg-white border border-dark-200 rounded-2xl p-4 shadow-sm">
                     <span className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Health Score</span>
                     <span className="text-xl font-black text-dark-900 mt-1 block">{currentFac.healthScore}%</span>
@@ -3885,7 +3906,7 @@ export const Dashboard = () => {
                 </div>
 
                 {/* Operations KPIs list */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                   <div className="bg-white border border-dark-200 rounded-2xl p-4 shadow-sm">
                     <span className="text-[9px] uppercase tracking-wider text-gray-text font-extrabold block">Avg Machine Health</span>
                     <span className="text-xl font-black text-dark-900 mt-1 block">{avgHealth}%</span>
@@ -4106,7 +4127,7 @@ export const Dashboard = () => {
       </AnimatePresence>
 
       {/* Floating Toast Notification Container */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+      <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 flex flex-col gap-3 max-w-[calc(100%-32px)] sm:max-w-sm w-full pointer-events-none">
         <AnimatePresence>
           {toasts.map(t => (
             <motion.div

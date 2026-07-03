@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-const API_URL = import.meta.env.VITE_API_URL || "${API_URL}";
-const WS_URL = API_URL.replace(/^http/, "ws");
+import { API_URL, WS_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 

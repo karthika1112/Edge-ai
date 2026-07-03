@@ -36,7 +36,7 @@ export const MicrosoftLogin = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#E5E5E5] font-sans text-[#1B1B1B]">
-      <div className="bg-white max-w-[440px] w-full p-11 border border-[#D2D2D2] shadow-md flex flex-col justify-between min-h-[380px]">
+      <div className="bg-white max-w-[440px] w-full p-6 sm:p-11 border border-[#D2D2D2] shadow-md flex flex-col justify-between min-h-[380px]">
         <div>
           {/* Microsoft Logo (standard layout) */}
           <div className="flex items-center gap-1.5 mb-6">
@@ -52,7 +52,7 @@ export const MicrosoftLogin = () => {
           <h2 className="text-xl font-semibold text-[#1B1B1B] mb-4">Sign in</h2>
           
           {error && (
-            <p className="text-[12.5px] text-[#E81123] mb-3 leading-tight">{error}</p>
+            <p className="text-[14px] sm:text-[12.5px] text-[#E81123] mb-3 leading-tight">{error}</p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,28 +61,28 @@ export const MicrosoftLogin = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email, phone, or Skype"
-              className="w-full px-3 py-2 border-b border-[#666] focus:border-[#0067B8] outline-none text-[15px] placeholder-[#666]"
+              className="w-full px-3 py-3 sm:py-2 border-b border-[#666] focus:border-[#0067B8] outline-none text-base md:text-[15px] placeholder-[#666]"
             />
             <input 
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full px-3 py-2 border-b border-[#666] focus:border-[#0067B8] outline-none text-[15px] placeholder-[#666]"
+              className="w-full px-3 py-3 sm:py-2 border-b border-[#666] focus:border-[#0067B8] outline-none text-base md:text-[15px] placeholder-[#666]"
             />
             
-            <div className="text-[13px] text-[#505050] space-y-3 pt-2">
+            <div className="text-sm sm:text-[13px] text-[#505050] space-y-3 pt-2">
               <p>No account? <a href="#create" className="text-[#0067B8] hover:underline">Create one!</a></p>
               <p>Can’t access your account? <a href="#cant" className="text-[#0067B8] hover:underline">Can’t access your account?</a></p>
             </div>
           </form>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
           <button 
             type="button"
             onClick={() => window.history.back()}
-            className="px-8 py-1.5 bg-[#CCCCCC] hover:bg-[#B3B3B3] text-black text-sm font-normal min-w-[94px] text-center"
+            className="px-8 py-3 sm:py-1.5 bg-[#CCCCCC] hover:bg-[#B3B3B3] text-black text-sm font-normal min-w-[94px] text-center rounded min-h-[48px] sm:min-h-0 flex items-center justify-center"
           >
             Back
           </button>
@@ -90,7 +90,7 @@ export const MicrosoftLogin = () => {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-8 py-1.5 bg-[#0067B8] hover:bg-[#005DA6] text-white text-sm font-normal min-w-[94px] text-center"
+            className="px-8 py-3 sm:py-1.5 bg-[#0067B8] hover:bg-[#005DA6] text-white text-sm font-normal min-w-[94px] text-center rounded min-h-[48px] sm:min-h-0 flex items-center justify-center"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
