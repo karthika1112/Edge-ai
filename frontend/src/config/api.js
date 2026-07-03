@@ -6,7 +6,7 @@ const getApiUrl = () => {
     if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
       return "http://127.0.0.1:8001";
     }
-    return ""; // Fallback for production deployment
+    return "https://edge-ai-final.onrender.com"; // Fallback for production deployment
   }
   
   // Remove trailing slash if present to avoid double-slash issues in endpoints
