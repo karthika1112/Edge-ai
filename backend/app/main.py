@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
@@ -146,6 +147,20 @@ def _write_audit(db: Session, operator: str, action: str, target: str, detail: s
 def seed_database():
     db = SessionLocal()
     try:
+        # Seed default admin (admin@example.com) if not exists
+        default_admin = db.query(models.User).filter(models.User.email == "admin@example.com").first()
+        if not default_admin:
+            hashed_pw = auth.get_password_hash("password123")
+            db.add(models.User(
+                email="admin@example.com",
+                hashed_password=hashed_pw,
+                role="Admin",
+                dept="Security",
+                name="Admin"
+            ))
+            db.commit()
+
+        # Seed original admin (operator@edgeshield.ai) if not exists
         admin_user = db.query(models.User).filter(models.User.email == "operator@edgeshield.ai").first()
         if not admin_user:
             hashed_pw = auth.get_password_hash("password123")
@@ -188,6 +203,13 @@ class SignUpPayload(BaseModel):
     email: str
     password: str
     dept: str
+
+class EditUserPayload(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    dept: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class MachinePayload(BaseModel):
     id: str
@@ -490,9 +512,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173", "http://127.0.0.1:5173",
-        "http://localhost:5174", "http://127.0.0.1:5174",
-        "http://localhost:5175", "http://127.0.0.1:5175",
+        "http://localhost:5173",
+        "http://localhost:5174",
         "https://edge-ai-iota.vercel.app"
     ],
     allow_origin_regex="https://.*\\.vercel\\.app",
@@ -559,28 +580,115 @@ def signup(payload: SignUpPayload, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Operator profile registered successfully."}
 
 @app.get("/api/users")
-def get_users(db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
-    users = db.query(models.User).all()
-    return [{"id": u.id, "name": u.name, "email": u.email, "role": u.role, "dept": u.dept} for u in users]
+def get_users(q: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
+    query = db.query(models.User)
+    if q:
+        query = query.filter(
+            or_(
+                models.User.email.contains(q),
+                models.User.name.contains(q),
+                models.User.role.contains(q),
+                models.User.dept.contains(q)
+            )
+        )
+    users = query.all()
+    return [{
+        "id": u.id,
+        "name": u.name,
+        "email": u.email,
+        "role": u.role,
+        "dept": u.dept,
+        "is_active": u.is_active if hasattr(u, "is_active") else True
+    } for u in users]
 
 @app.post("/api/users")
 def create_user(payload: SignUpPayload, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
     if db.query(models.User).filter(models.User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Operator email is already registered.")
     hashed_pw = auth.get_password_hash(payload.password)
-    db.add(models.User(
+    new_user = models.User(
         email=payload.email, hashed_password=hashed_pw,
-        name=payload.name, dept=payload.dept, role=payload.dept
-    ))
+        name=payload.name, dept=payload.dept, role=payload.dept,
+        is_active=True
+    )
+    db.add(new_user)
     db.commit()
     _write_audit(db, current_user.email, "USER_CREATE", payload.email, f"Registered new user operator: {payload.name}")
     return {"status": "success", "message": "User operator created successfully."}
+
+@app.put("/api/users/{user_id}")
+def edit_user(user_id: int, payload: EditUserPayload, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    if user.email.lower() in protected_emails:
+        if payload.is_active is False:
+            raise HTTPException(status_code=400, detail="Default admin accounts cannot be deactivated.")
+            
+    if payload.name is not None:
+        user.name = payload.name
+    if payload.email is not None:
+        if payload.email != user.email:
+            existing = db.query(models.User).filter(models.User.email == payload.email).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Email is already registered by another operator.")
+        user.email = payload.email
+    if payload.role is not None:
+        user.role = payload.role
+    if payload.dept is not None:
+        user.dept = payload.dept
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+        
+    db.commit()
+    _write_audit(db, current_user.email, "USER_EDIT", user.email, f"Edited operator user: {user.email}")
+    return {"status": "success", "message": "Operator profile updated successfully."}
+
+@app.post("/api/users/{user_id}/activate")
+def activate_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    user.is_active = True
+    db.commit()
+    _write_audit(db, current_user.email, "USER_ACTIVATE", user.email, f"Activated operator: {user.email}")
+    return {"status": "success", "message": "Operator activated successfully."}
+
+@app.post("/api/users/{user_id}/deactivate")
+def deactivate_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    if user.email.lower() in protected_emails:
+        raise HTTPException(status_code=400, detail="Default admin accounts cannot be deactivated.")
+        
+    user.is_active = False
+    db.commit()
+    _write_audit(db, current_user.email, "USER_DEACTIVATE", user.email, f"Deactivated operator: {user.email}")
+    return {"status": "success", "message": "Operator deactivated successfully."}
 
 @app.delete("/api/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
+        
+    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    protected_names = {"admin", "super admin", "default administrator"}
+    protected_roles = {"admin", "super admin", "default administrator", "administrator"}
+    
+    if (user.email.lower() in protected_emails or
+        (user.name and user.name.lower() in protected_names) or
+        user.role.lower() in protected_roles):
+        raise HTTPException(
+            status_code=400,
+            detail="The default admin and administrator accounts cannot be deleted."
+        )
+        
     db.delete(user)
     db.commit()
     _write_audit(db, current_user.email, "USER_DELETE", user.email, f"Deleted operator user: {user.email}")
@@ -592,6 +700,9 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     if not user or not auth.verify_password(payload.password, user.hashed_password):
         _write_audit(db, payload.email, "LOGIN_FAIL", payload.email, "Invalid credentials")
         raise HTTPException(status_code=401, detail="Invalid email or password credentials.")
+    if hasattr(user, "is_active") and user.is_active is False:
+        _write_audit(db, payload.email, "LOGIN_FAIL", payload.email, "Account deactivated")
+        raise HTTPException(status_code=403, detail="Account is deactivated. Please contact your system administrator.")
     access_token  = auth.create_access_token(data={
         "sub": user.email,
         "role": user.role,
