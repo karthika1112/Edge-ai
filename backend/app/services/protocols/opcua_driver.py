@@ -1,5 +1,5 @@
 """
-EdgeShield AI — OPC-UA Protocol Driver
+IndusGuard AI — OPC-UA Protocol Driver
 ========================================
 Plug-in adapter for reading real machine telemetry from an OPC-UA server.
 
@@ -41,7 +41,7 @@ USAGE:
 
 REAL HARDWARE INTEGRATION NOTES:
     - OPC-UA server runs on your SCADA system or directly on the PLC
-    - EdgeShield connects as an OPC-UA client on the local OT network
+    - IndusGuard connects as an OPC-UA client on the local OT network
     - No internet connection required
     - Security mode: "None" for lab/test, "SignAndEncrypt" for production
     - For Modbus-to-OPC-UA bridging, use Prosys OPC UA Modbus Gateway
@@ -53,7 +53,7 @@ from typing import List, Dict, Optional
 
 class OPCUADriver:
     """
-    OPC-UA telemetry driver for EdgeShield AI.
+    OPC-UA telemetry driver for IndusGuard AI.
     Implements the same fetch_telemetry_tick() interface as TelemetryDriver.
     """
 

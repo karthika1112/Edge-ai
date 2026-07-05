@@ -57,7 +57,7 @@ export const Login = () => {
       
       setTimeout(() => {
         if (code === 'mock_entra_auth_code_xyz') {
-          login('operator@edgeshield.ai', 'password123')
+          login('operator@indusguard.ai', 'password123')
             .then(() => {
               setAuthSuccess('SSO Authentication successful. Welcome!');
               // Clear search params
@@ -156,7 +156,7 @@ export const Login = () => {
             <Shield className="w-5.5 h-5.5 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-extrabold text-lg tracking-tight">
-            EdgeShield <span className="text-primary-400">AI</span>
+            IndusGuard <span className="text-primary-400">AI</span>
           </span>
         </div>
 
@@ -210,7 +210,7 @@ export const Login = () => {
 
         {/* Footer */}
         <div className="relative z-10 text-[10px] text-slate-500 font-medium flex items-center justify-between">
-          <span>© 2026 EdgeShield AI Inc.</span>
+          <span>© 2026 IndusGuard AI Inc.</span>
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Edge Agent Synced: Detroit Hub #4
@@ -261,8 +261,14 @@ export const Login = () => {
                 </svg>
               </div>
               <span className="text-xl font-bold tracking-tight text-[#1E293B]">
-                EDGE<span className="text-primary-600 font-extrabold">SHIELD</span> <span className="text-[#64748B] font-light">AI</span>
+                INDUS<span className="text-primary-600 font-extrabold">GUARD</span> <span className="text-[#64748B] font-light">AI</span>
               </span>
+              <h2 className="text-sm font-bold text-dark-900 mt-3 text-center">
+                {isSignUp ? "Create your IndusGuard AI Account" : "Welcome to IndusGuard AI"}
+              </h2>
+              <p className="text-[10px] text-gray-text text-center mt-1">
+                {isSignUp ? "Register your operator profile for smart industrial monitoring" : "Sign in to access the predictive maintenance dashboard"}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full" noValidate>

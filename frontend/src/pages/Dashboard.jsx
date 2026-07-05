@@ -43,9 +43,9 @@ const INITIAL_ALERTS = [
 ];
 
 const INITIAL_USERS = [
-  { empId: 'EMP-001', name: 'Aishwarya R', email: 'aishwarya@edgeshield.ai', dept: 'Security', role: 'Administrator', status: 'Active', lastLogin: 'Just now', machines: 'All Assets', designation: 'Principal Security Analyst' },
-  { empId: 'EMP-005', name: 'Sarah Jenkins', email: 's.jenkins@edgeshield.ai', dept: 'Maintenance', role: 'Maintenance Engineer', status: 'Active', lastLogin: '10 Mins Ago', machines: 'MC-101, MC-104, MC-106', designation: 'Lead Mechanical Technician' },
-  { empId: 'EMP-008', name: 'Alex Mercer', email: 'a.mercer@edgeshield.ai', dept: 'Production', role: 'Operations Manager', status: 'Active', lastLogin: '1 Hour Ago', machines: 'MC-108 Spindle', designation: 'Assembly Operations Supervisor' }
+  { empId: 'EMP-001', name: 'Aishwarya R', email: 'aishwarya@indusguard.ai', dept: 'Security', role: 'Administrator', status: 'Active', machines: 'All Assets', designation: 'Principal Security Analyst' },
+  { empId: 'EMP-005', name: 'Sarah Jenkins', email: 's.jenkins@indusguard.ai', dept: 'Maintenance', role: 'Maintenance Engineer', status: 'Active', machines: 'MC-101, MC-104, MC-106', designation: 'Lead Mechanical Technician' },
+  { empId: 'EMP-008', name: 'Alex Mercer', email: 'a.mercer@indusguard.ai', dept: 'Production', role: 'Operations Manager', status: 'Active', machines: 'MC-108 Spindle', designation: 'Assembly Operations Supervisor' }
 ];
 
 const INITIAL_SESSIONS = [
@@ -165,7 +165,7 @@ export const Dashboard = () => {
 
   // AI Copilot state
   const [chatMessages, setChatMessages] = useState([
-    { id: 'msg-1', sender: 'assistant', text: "Hello! I am your EdgeShield AI Copilot. Ask anything about your industrial network, machine telemetry parameters, energy loads, or active cybersecurity incidents.", time: '14:20' }
+    { id: 'msg-1', sender: 'assistant', text: "Hello! I am your IndusGuard AI Copilot. Ask anything about your industrial network, machine telemetry parameters, energy loads, or active cybersecurity incidents.", time: '14:20' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isCopilotTyping, setIsCopilotTyping] = useState(false);
@@ -359,6 +359,8 @@ export const Dashboard = () => {
             }));
             setMachines(normalized);
           }
+        } else {
+          console.error(`Failed to fetch machines API: HTTP ${mRes.status} ${mRes.statusText}`);
         }
 
         // Fetch alerts
@@ -366,6 +368,8 @@ export const Dashboard = () => {
         if (aRes.ok) {
           const aData = await aRes.json();
           if (aData && aData.length > 0) setAlerts(aData);
+        } else {
+          console.error(`Failed to fetch alerts API: HTTP ${aRes.status} ${aRes.statusText}`);
         }
 
         // Fetch settings
@@ -377,6 +381,8 @@ export const Dashboard = () => {
             setHealthCritThreshold(sData.healthCritThreshold);
             setPredictSensitivity(sData.predictSensitivity);
             setAiEnabled(sData.aiEnabled);
+          } else {
+            console.error(`Failed to fetch settings API: HTTP ${sRes.status} ${sRes.statusText}`);
           }
         } catch (err) {
           console.warn("Failed to fetch settings from backend", err);
@@ -388,6 +394,8 @@ export const Dashboard = () => {
           if (dRes.ok) {
             const dData = await dRes.json();
             if (dData && dData.length > 0) setCyberDevices(dData);
+          } else {
+            console.error(`Failed to fetch cyber devices API: HTTP ${dRes.status} ${dRes.statusText}`);
           }
         } catch (err) {
           console.warn("Failed to fetch cyber devices", err);
@@ -503,7 +511,7 @@ export const Dashboard = () => {
     if (anomalies.length > 0) {
       const primaryAnomaly = anomalies[0];
       suggestedAction = primaryAnomaly.action;
-      explanation = `${primaryAnomaly.rootCause} EdgeShield AI flags potential ${primaryAnomaly.type.toLowerCase()} anomaly.`;
+      explanation = `${primaryAnomaly.rootCause} IndusGuard AI flags potential ${primaryAnomaly.type.toLowerCase()} anomaly.`;
     } else if (status === 'Warning') {
       suggestedAction = 'Schedule electrical & thermal maintenance audit during next downtime window.';
       explanation = 'Elevated operational parameters detected. Motor is operating slightly above baseline benchmarks.';
@@ -525,14 +533,23 @@ export const Dashboard = () => {
   useEffect(() => {
     let ws = null;
     let fallbackInterval = null;
+    let reconnectTimeout = null;
+    let isUnmounted = false;
 
     const connectWS = () => {
+      if (isUnmounted) return;
+      
       try {
+        console.log(`Attempting WebSocket connection to: ${WS_URL}/ws/live`);
         ws = new WebSocket(`${WS_URL}/ws/live`);
 
         ws.onopen = async () => {
+          if (isUnmounted) {
+            ws.close();
+            return;
+          }
           setIsBackendConnected(true);
-          console.log("EdgeShield AI live full-stack telemetry sync active.");
+          console.log("IndusGuard AI live full-stack telemetry sync active.");
           if (fallbackInterval) {
             clearInterval(fallbackInterval);
             fallbackInterval = null;
@@ -561,6 +578,7 @@ export const Dashboard = () => {
         };
 
         ws.onmessage = (event) => {
+          if (isUnmounted) return;
           try {
             const data = JSON.parse(event.data);
             if (data.machines) {
@@ -598,16 +616,42 @@ export const Dashboard = () => {
           }
         };
 
-        ws.onerror = () => {
-          setIsBackendConnected(false);
+        ws.onerror = (error) => {
+          console.error("WebSocket connection error occurred.");
         };
 
-        ws.onclose = () => {
-          setIsBackendConnected(false);
-          startFallback();
-          setTimeout(connectWS, 5000);
+        ws.onclose = async (event) => {
+          if (isUnmounted) return;
+          
+          console.warn(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason || 'No specific reason provided'}, wasClean: ${event.wasClean}`);
+          
+          // Verify backend reachability before switching to offline mode
+          let isReachable = false;
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const testRes = await fetch(`${API_URL}/api/users`, {
+              headers: { 'Authorization': `Bearer ${token}` },
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            isReachable = testRes.ok;
+          } catch (e) {
+            isReachable = false;
+          }
+
+          if (!isReachable) {
+            setIsBackendConnected(false);
+            startFallback();
+          } else {
+            console.log("WebSocket closed, but HTTP server is reachable. Skipping offline mode fallback, retrying WebSocket...");
+          }
+
+          if (reconnectTimeout) clearTimeout(reconnectTimeout);
+          reconnectTimeout = setTimeout(connectWS, 5000);
         };
       } catch (err) {
+        console.error("WebSocket exception during connect:", err);
         setIsBackendConnected(false);
         startFallback();
       }
@@ -800,10 +844,11 @@ export const Dashboard = () => {
               email: u.email,
               dept: u.dept || 'Production',
               role: u.role,
-              status: 'Active',
-              lastLogin: 'Today'
+              status: 'Active'
             }));
             setUsers(normalized);
+          } else {
+            console.error(`Failed to fetch operators database API: HTTP ${res.status} ${res.statusText}`);
           }
         } catch (err) {
           console.warn("Failed to fetch operators database:", err);
@@ -813,7 +858,13 @@ export const Dashboard = () => {
     fetchUsers();
 
     return () => {
-      if (ws) ws.close();
+      isUnmounted = true;
+      if (ws) {
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
+      }
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (fallbackInterval) clearInterval(fallbackInterval);
     };
   }, [healthWarnThreshold, healthCritThreshold, token]);
@@ -1177,7 +1228,7 @@ export const Dashboard = () => {
       }
       // ─── INTENT: Greetings ───
       else if (/^(hi|hello|hey|howdy|good (morning|evening|afternoon)|what's up|sup)\b/.test(q)) {
-        replyText = `Hello! 👋 I'm your **EdgeShield AI Copilot** — your real-time industrial intelligence assistant.\n\nCurrently monitoring **${machines.length} active machine nodes** across Detroit Smart Assembly Hub #4. Factory health is at **${avgHealth}%** with **${openAlerts.length} open alerts**.\n\nAsk me anything — machine diagnostics, failure predictions, cybersecurity incidents, energy loads, or maintenance planning!`;
+        replyText = `Hello! 👋 I'm your **IndusGuard AI Copilot** — your real-time industrial intelligence assistant.\n\nCurrently monitoring **${machines.length} active machine nodes** across Detroit Smart Assembly Hub #4. Factory health is at **${avgHealth}%** with **${openAlerts.length} open alerts**.\n\nAsk me anything — machine diagnostics, failure predictions, cybersecurity incidents, energy loads, or maintenance planning!`;
       }
       // ─── INTENT: Help / Capabilities ───
       else if (q.includes('help') || q.includes('what can you do') || q.includes('capabilities') || q.includes('commands')) {
@@ -1200,7 +1251,7 @@ export const Dashboard = () => {
       // ─── INTENT: Failure predictions ───
       else if (q.includes('fail') || q.includes('failure prob') || q.includes('rul') || q.includes('remaining useful life') || q.includes('breakdown')) {
         const sorted = [...machines].sort((a, b) => (b.failureProbability ?? 0) - (a.failureProbability ?? 0));
-        replyText = `**🔮 Failure Probability Ranking** (EdgeShield LSTM Predictive Model):\n\n` +
+        replyText = `**🔮 Failure Probability Ranking** (IndusGuard LSTM Predictive Model):\n\n` +
           sorted.map((m, i) => {
             const icon = (m.failureProbability ?? 0) > 50 ? '🔴' : (m.failureProbability ?? 0) > 20 ? '🟡' : '🟢';
             return `${i + 1}. ${icon} **${m.name}** — Failure Prob: **${(m.failureProbability ?? 0).toFixed(1)}%**, RUL: **${m.rul} hrs**`;
@@ -1500,7 +1551,7 @@ export const Dashboard = () => {
             <td style="font-size:10px">${a.summary?.slice(0,60)||'—'}...</td>
           </tr>`).join('');
 
-        const html = `<!DOCTYPE html><html><head><title>EdgeShield AI – ${repSelectedType}</title>
+        const html = `<!DOCTYPE html><html><head><title>IndusGuard AI – ${repSelectedType}</title>
         <style>
           *{margin:0;padding:0;box-sizing:border-box}
           body{font-family:Arial,sans-serif;font-size:11px;color:#1e293b;padding:24px}
@@ -1518,7 +1569,7 @@ export const Dashboard = () => {
           .footer{margin-top:24px;font-size:9px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:8px}
           @media print{body{padding:12px}.no-print{display:none}}
         </style></head><body>
-        <h1>⚡ EdgeShield AI — ${repSelectedType}</h1>
+        <h1>⚡ IndusGuard AI — ${repSelectedType}</h1>
         <div class="meta">Generated: ${dateStr} &nbsp;|&nbsp; Department: ${user?.dept||'Maintenance'} &nbsp;|&nbsp; Operator: ${user?.name||'Admin'}</div>
         <div class="kpi">
           <div class="kpi-card"><div class="val">${avgHealth}%</div><div class="lbl">Factory Health</div></div>
@@ -1534,7 +1585,7 @@ export const Dashboard = () => {
         ${openAlerts.length > 0 ? `<h2>Open Alerts (${openAlerts.length})</h2>
         <table><thead><tr><th>ID</th><th>Machine</th><th>Type</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Summary</th></tr></thead>
         <tbody>${alertRows}</tbody></table>` : ''}
-        <div class="footer">EdgeShield AI Platform &nbsp;|&nbsp; Confidential – Internal Use Only &nbsp;|&nbsp; ${dateStr}</div>
+        <div class="footer">IndusGuard AI Platform &nbsp;|&nbsp; Confidential – Internal Use Only &nbsp;|&nbsp; ${dateStr}</div>
         </body></html>`;
 
         const printWin = window.open('', '_blank', 'width=900,height=700');
@@ -1568,7 +1619,7 @@ export const Dashboard = () => {
           a.assignedTo||'Unassigned', `"${a.summary?.replace(/"/g,"'")||''}"`
         ]);
         const csv = [
-          `EdgeShield AI – ${repSelectedType}`,
+          `IndusGuard AI – ${repSelectedType}`,
           `Generated: ${dateStr}`,
           `Factory Health: ${avgHealth}% | Open Alerts: ${openAlerts.length}`,
           '',
@@ -1602,7 +1653,7 @@ export const Dashboard = () => {
           m.suggestedAction||'No action required'
         ]);
         const tsv = [
-          `EdgeShield AI – ${repSelectedType}\t`,
+          `IndusGuard AI – ${repSelectedType}\t`,
           `Generated: ${dateStr}\t`,
           '',
           header.join('\t'),
@@ -1731,7 +1782,7 @@ export const Dashboard = () => {
                 <Shield className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
               </div>
               <span className="font-bold text-sm tracking-tight text-dark-900 whitespace-nowrap">
-                EdgeShield <span className="text-primary-600">AI</span>
+                IndusGuard <span className="text-primary-600">AI</span>
               </span>
             </div>
             <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="hidden md:block p-1.5 hover:bg-dark-50 rounded-lg text-dark-500">
@@ -1944,7 +1995,7 @@ export const Dashboard = () => {
                 </span>
                 <div>
                   <span className="uppercase tracking-wider mr-2 bg-white/20 px-2 py-0.5 rounded text-[10px]">Offline Mode Active</span>
-                  <span>EdgeShield AI is running entirely inside your browser cache. All diagnostics, alert detections, and predictive models continue to process locally.</span>
+                  <span>IndusGuard AI is running entirely inside your browser cache. All diagnostics, alert detections, and predictive models continue to process locally.</span>
                 </div>
               </div>
               <span className="text-[10px] text-white/80 italic font-mono">Air-Gapped Mode</span>
@@ -2821,7 +2872,7 @@ export const Dashboard = () => {
                           </div>
                           <div>
                             <span className="text-[10px] text-gray-text font-extrabold uppercase tracking-wide block mb-1">Generated By Model</span>
-                            <div className="font-bold text-dark-900">{alertDetails.generatedBy || 'LSTM v2.1 (EdgeShield)'}</div>
+                            <div className="font-bold text-dark-900">{alertDetails.generatedBy || 'LSTM v2.1 (IndusGuard)'}</div>
                           </div>
                           <div>
                             <span className="text-[10px] text-gray-text font-extrabold uppercase tracking-wide block mb-1">Timestamp</span>
@@ -3007,7 +3058,6 @@ export const Dashboard = () => {
                         <th className="py-2.5 px-3">Name</th>
                         <th className="py-2.5 px-3">Department</th>
                         <th className="py-2.5 px-3">Role</th>
-                        <th className="py-2.5 px-3">Last Login</th>
                         <th className="py-2.5 px-3 text-right">Status</th>
                       </tr>
                     </thead>
@@ -3020,7 +3070,6 @@ export const Dashboard = () => {
                           </td>
                           <td className="py-3 px-3 text-gray-text">{u.dept}</td>
                           <td className="py-3 px-3"><span className="bg-primary-50 border border-primary-200 text-primary-700 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">{u.role}</span></td>
-                          <td className="py-3 px-3 text-gray-text">{u.lastLogin}</td>
                           <td className="py-3 px-3 text-right">
                             <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border ${getUserStatusBadge(u.status)}`}>{u.status}</span>
                           </td>
@@ -3996,7 +4045,7 @@ export const Dashboard = () => {
                   </div>
                   <div>
                     <h2 className="text-sm font-extrabold text-white tracking-tight">Help & Documentation</h2>
-                    <p className="text-[10px] text-primary-200 font-semibold">EdgeShield AI — v2.1.0</p>
+                    <p className="text-[10px] text-primary-200 font-semibold">IndusGuard AI — v2.1.0</p>
                   </div>
                 </div>
                 <button
@@ -4095,7 +4144,7 @@ export const Dashboard = () => {
                 <div className="bg-gradient-to-br from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-4 space-y-2">
                   <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-primary-700 mb-2">Platform Information</h3>
                   {[
-                    ['Platform', 'EdgeShield AI Industrial Edge'],
+                    ['Platform', 'IndusGuard AI Industrial Edge'],
                     ['Version', '2.1.0 — Offline-First'],
                     ['AI Engine', 'Edge LSTM + Spectral Regressor'],
                     ['Backend', 'Node.js Express + JSON DB'],

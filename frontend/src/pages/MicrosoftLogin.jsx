@@ -19,7 +19,7 @@ export const MicrosoftLogin = () => {
 
     setTimeout(() => {
       // Allow only the valid mock credentials
-      if (email === 'operator@edgeshield.ai' && password === 'password123') {
+      if (email === 'operator@indusguard.ai' && password === 'password123') {
         // Successful login: redirect back to redirectUri with mock authorization code
         const searchParams = new URLSearchParams(window.location.search);
         const redirectUri = searchParams.get('redirect_uri') || (window.location.origin + '/login');

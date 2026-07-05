@@ -1,5 +1,5 @@
 """
-EdgeShield AI — Python FastAPI Production Server
+IndusGuard AI — Python FastAPI Production Server
 Edge AI Edition v2.1.0
 
 All AI processing is local. No cloud API required.
@@ -160,12 +160,12 @@ def seed_database():
             ))
             db.commit()
 
-        # Seed original admin (operator@edgeshield.ai) if not exists
-        admin_user = db.query(models.User).filter(models.User.email == "operator@edgeshield.ai").first()
+        # Seed original admin (operator@indusguard.ai) if not exists
+        admin_user = db.query(models.User).filter(models.User.email == "operator@indusguard.ai").first()
         if not admin_user:
             hashed_pw = auth.get_password_hash("password123")
             db.add(models.User(
-                email="operator@edgeshield.ai",
+                email="operator@indusguard.ai",
                 hashed_password=hashed_pw,
                 role="Administrator",
                 dept="Security",
@@ -221,14 +221,15 @@ class MachinePayload(BaseModel):
 class AlertPayload(BaseModel):
     id: str
     machine: str
-    machine_id: str
+    machine_id: Optional[str] = None
+    machineId: Optional[str] = None
     type: str
     priority: str
     summary: str
-    aiExplanation: str
-    recommendedAction: str
-    assignedTo: str
-    affected: str
+    aiExplanation: Optional[str] = None
+    recommendedAction: Optional[str] = None
+    assignedTo: Optional[str] = None
+    affected: Optional[str] = None
 
 class SyncPayload(BaseModel):
     alerts: List[AlertPayload]
@@ -460,13 +461,13 @@ async def telemetry_loop():
                 await manager.broadcast(json.dumps(payload))
 
             except Exception as e:
-                print(f"[EdgeShield AI] Telemetry loop error: {e}")
+                print(f"[IndusGuard AI] Telemetry loop error: {e}")
             finally:
                 db.close()
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[EdgeShield AI] Telemetry task outer exception: {e}")
+            print(f"[IndusGuard AI] Telemetry task outer exception: {e}")
 
 _telemetry_task: Optional[asyncio.Task] = None
 
@@ -503,7 +504,7 @@ async def lifespan(app: FastAPI):
 
 # ─── FastAPI app ──────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="EdgeShield AI — Edge Processing Server",
+    title="IndusGuard AI — Edge Processing Server",
     version=EDGE_AI_VERSION,
     description="Fully offline, local-first industrial AI platform. No cloud required.",
     lifespan=lifespan
@@ -528,11 +529,11 @@ app.add_middleware(
 def read_root():
     return {
         "status":      "running",
-        "application": "EdgeShield AI",
+        "application": "IndusGuard AI",
         "version":     EDGE_AI_VERSION,
         "mode":        TELEMETRY_MODE,
         "cloud":       False,
-        "message":     "EdgeShield AI Edge Server is running. No cloud required."
+        "message":     "IndusGuard AI Edge Server is running. No cloud required."
     }
 
 @app.get("/health")
@@ -566,6 +567,7 @@ def edge_status():
         "activeProtocol": TELEMETRY_MODE
     }
 
+@app.post("/api/register")
 @app.post("/api/signup")
 def signup(payload: SignUpPayload, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == payload.email).first():
@@ -580,7 +582,7 @@ def signup(payload: SignUpPayload, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Operator profile registered successfully."}
 
 @app.get("/api/users")
-def get_users(q: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(auth.check_admin_privilege)):
+def get_users(q: Optional[str] = None, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     query = db.query(models.User)
     if q:
         query = query.filter(
@@ -598,6 +600,7 @@ def get_users(q: Optional[str] = None, db: Session = Depends(get_db), current_us
         "email": u.email,
         "role": u.role,
         "dept": u.dept,
+        "department": u.dept,
         "is_active": u.is_active if hasattr(u, "is_active") else True
     } for u in users]
 
@@ -622,7 +625,7 @@ def edit_user(user_id: int, payload: EditUserPayload, db: Session = Depends(get_
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
         
-    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    protected_emails = {"admin@example.com", "operator@indusguard.ai"}
     if user.email.lower() in protected_emails:
         if payload.is_active is False:
             raise HTTPException(status_code=400, detail="Default admin accounts cannot be deactivated.")
@@ -662,7 +665,7 @@ def deactivate_user(user_id: int, db: Session = Depends(get_db), current_user: m
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
         
-    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    protected_emails = {"admin@example.com", "operator@indusguard.ai"}
     if user.email.lower() in protected_emails:
         raise HTTPException(status_code=400, detail="Default admin accounts cannot be deactivated.")
         
@@ -677,7 +680,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: model
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
         
-    protected_emails = {"admin@example.com", "operator@edgeshield.ai"}
+    protected_emails = {"admin@example.com", "operator@indusguard.ai"}
     protected_names = {"admin", "super admin", "default administrator"}
     protected_roles = {"admin", "super admin", "default administrator", "administrator"}
     
@@ -703,6 +706,8 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     if hasattr(user, "is_active") and user.is_active is False:
         _write_audit(db, payload.email, "LOGIN_FAIL", payload.email, "Account deactivated")
         raise HTTPException(status_code=403, detail="Account is deactivated. Please contact your system administrator.")
+
+
     access_token  = auth.create_access_token(data={
         "sub": user.email,
         "role": user.role,
@@ -836,10 +841,17 @@ def sync_alerts(payload: SyncPayload, db: Session = Depends(get_db),
     for s in payload.alerts:
         if not db.query(models.Alert).filter(models.Alert.id == s.id).first():
             db.add(models.Alert(
-                id=s.id, machine=s.machine, machine_id=s.machine_id,
-                type=s.type, priority=s.priority, summary=s.summary,
-                ai_explanation=s.aiExplanation, recommended_action=s.recommendedAction,
-                status=s.status, assigned_to=s.assignedTo, affected=s.affected
+                id=s.id,
+                machine=s.machine,
+                machine_id=s.machine_id or s.machineId or "N/A",
+                type=s.type,
+                priority=s.priority,
+                summary=s.summary,
+                ai_explanation=s.aiExplanation or "No explanation.",
+                recommended_action=s.recommendedAction or "No action suggested.",
+                assigned_to=s.assignedTo or "Unassigned",
+                affected=s.affected or "N/A",
+                status="Open"
             ))
             synced += 1
     if synced > 0:
@@ -910,7 +922,11 @@ def get_audit_logs(db: Session = Depends(get_db),
 @app.websocket("/ws/live-data")
 @app.websocket("/ws/live")
 async def websocket_endpoint(websocket: WebSocket):
+    client_host = websocket.client.host if websocket.client else 'unknown'
+    print(f"[WebSocket] Client connecting from {client_host}")
     await manager.connect(websocket)
+    print(f"[WebSocket] Client connected successfully. Active clients: {len(manager.active_connections)}")
+    
     db = SessionLocal()
     try:
         machines = db.query(models.Machine).all()
@@ -926,8 +942,12 @@ async def websocket_endpoint(websocket: WebSocket):
             }
             for m in machines
         ]
+    except Exception as e:
+        print(f"[WebSocket] Database error reading machines: {e}")
+        machines_data = []
     finally:
         db.close()
+        
     try:
         await websocket.send_text(json.dumps({
             "timestamp":    time.time(),
@@ -945,6 +965,12 @@ async def websocket_endpoint(websocket: WebSocket):
             }
         }))
         while True:
+            # Loop to keep connection open and detect client close events
             await websocket.receive_text()
     except WebSocketDisconnect:
+        print(f"[WebSocket] Client disconnected from {client_host} (WebSocketDisconnect)")
+    except Exception as e:
+        print(f"[WebSocket] Connection closed with exception for {client_host}: {e}")
+    finally:
         manager.disconnect(websocket)
+        print(f"[WebSocket] Cleaned up client connection from {client_host}. Active clients: {len(manager.active_connections)}")

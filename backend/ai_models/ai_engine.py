@@ -172,7 +172,7 @@ def analyze_telemetry(machine, history=None, thresholds=None):
         suggested_action = anomalies[0]["action"]
         explanation = (
             f"{anomalies[0]['rootCause']} "
-            f"EdgeShield Edge AI flags potential {anomalies[0]['type'].lower()} anomaly "
+            f"IndusGuard Edge AI flags potential {anomalies[0]['type'].lower()} anomaly "
             f"({len(anomalies)} total anomaly type(s) detected)."
         )
     elif status == 'Warning':

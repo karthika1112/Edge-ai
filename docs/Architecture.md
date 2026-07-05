@@ -1,4 +1,4 @@
-# EdgeShield AI - Architecture
+# IndusGuard AI - Architecture
 
 ## Frontend
 - React 19 + Vite

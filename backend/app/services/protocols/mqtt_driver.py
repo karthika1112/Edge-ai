@@ -1,5 +1,5 @@
 """
-EdgeShield AI — MQTT Protocol Driver
+IndusGuard AI — MQTT Protocol Driver
 =====================================
 Plug-in adapter for reading real machine telemetry from an MQTT broker.
 
@@ -49,7 +49,7 @@ EXPECTED MQTT PAYLOAD FORMAT (JSON per topic):
 
 REAL HARDWARE INTEGRATION NOTES:
     - Each machine's PLC or IoT gateway publishes to its assigned MQTT topic
-    - EdgeShield subscribes to all machine topics locally
+    - IndusGuard subscribes to all machine topics locally
     - No internet connection required — broker runs on the same edge server
     - For Modbus-to-MQTT bridging, use: https://github.com/irios-things/modbus2mqtt
     - For OPC-UA-to-MQTT bridging, use: https://github.com/node-opcua/node-opcua
@@ -61,7 +61,7 @@ from typing import List, Dict, Optional
 
 class MQTTDriver:
     """
-    MQTT telemetry driver for EdgeShield AI.
+    MQTT telemetry driver for IndusGuard AI.
     Implements the same fetch_telemetry_tick() interface as TelemetryDriver.
     """
 

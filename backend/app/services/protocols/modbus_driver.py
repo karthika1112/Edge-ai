@@ -1,5 +1,5 @@
 """
-EdgeShield AI — Modbus TCP/RTU Protocol Driver
+IndusGuard AI — Modbus TCP/RTU Protocol Driver
 ================================================
 Plug-in adapter for reading real machine telemetry via Modbus protocol.
 
@@ -61,7 +61,7 @@ from typing import List, Dict, Optional
 
 class ModbusDriver:
     """
-    Modbus TCP/RTU telemetry driver for EdgeShield AI.
+    Modbus TCP/RTU telemetry driver for IndusGuard AI.
     Implements the same fetch_telemetry_tick() interface as TelemetryDriver.
     """
 

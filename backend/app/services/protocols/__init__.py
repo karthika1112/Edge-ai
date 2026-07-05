@@ -1,1 +1,1 @@
-"""EdgeShield AI — Protocol Integration Drivers"""
+"""IndusGuard AI — Protocol Integration Drivers"""

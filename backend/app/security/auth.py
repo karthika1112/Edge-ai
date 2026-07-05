@@ -63,7 +63,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def check_admin_privilege(current_user: models.User = Depends(get_current_user)):
-    if current_user.role != "Administrator":
+    if current_user.role not in ("Administrator", "Admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Operation restricted to Administrator role privileges."
